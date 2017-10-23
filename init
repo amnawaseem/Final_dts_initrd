@@ -1,0 +1,40 @@
+#!/bin/busybox sh
+
+die() {
+    echo "$1"
+    setsid cttyhack sh
+}
+
+cmdline() {
+    local value
+    value=" $(cat /proc/cmdline) "
+    value="${value##* $1=}"
+    value="${value%% *}"
+    [ "$value" != "" ] && echo "$value"
+}
+
+/bin/busybox echo "Installing busybox symlinks..."
+
+/bin/busybox --install -s /bin
+
+
+[ -d /dev ] || mkdir -m 0755 /dev
+[ -d /root ] || mkdir -m 0700 /root
+[ -d /sys ] || mkdir /sys
+[ -d /proc ] || mkdir /proc
+[ -d /tmp ] || mkdir /tmp
+mount -t proc proc /proc
+#echo 0 > /proc/sys/kernel/printk
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mount -t tmpfs none -o size=5000k /tmp
+
+
+START=$(cmdline start)
+
+if [ -n "$START" ]; then
+#    eval "$START"
+     exec /bin/sh
+fi
+
+die "Entering shell"
